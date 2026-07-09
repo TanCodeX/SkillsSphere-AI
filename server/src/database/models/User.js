@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      maxLength: 255,
       get: decrypt,
       set: encrypt,
     },
@@ -16,6 +17,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      maxLength: 255,
       get: decrypt,
       set: encryptDeterministic,
     },
@@ -74,11 +76,13 @@ const userSchema = new mongoose.Schema(
 
     company: {
       type: String,
+      maxLength: 100,
       default: null,
     },
 
     companyWebsite: {
       type: String,
+      maxLength: 255,
       default: null,
     },
 
@@ -90,11 +94,13 @@ const userSchema = new mongoose.Schema(
 
     linkedinUrl: {
       type: String,
+      maxLength: 255,
       default: null,
     },
 
     credentialUrl: {
       type: String,
+      maxLength: 255,
       default: null,
     },
 
