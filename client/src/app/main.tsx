@@ -43,3 +43,21 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     </Provider>
   </React.StrictMode>
 );
+
+// Register PWA service worker
+if ('serviceWorker' in navigator) {
+  import('virtual:pwa-register').then(({ registerSW }) => {
+    const updateSW = registerSW({
+      onNeedRefresh() {
+        if (confirm('New content available. Reload?')) {
+          updateSW(true);
+        }
+      },
+      onOfflineReady() {
+        console.log('App ready to work offline');
+      },
+    });
+  }).catch(err => {
+    console.error('Service worker registration failed:', err);
+  });
+}
