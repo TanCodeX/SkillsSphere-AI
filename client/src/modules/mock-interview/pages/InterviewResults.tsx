@@ -22,11 +22,13 @@ import {
   FileJson,
   Sparkles,
   Bookmark,
-  Download
+  Download,
+  Copy
 } from "lucide-react";
 import Navbar from "../../../shared/components/Navbar";
 import Footer from "../../../shared/components/Footer";
 import { generatePDFReport } from "../utils/pdfGenerator";
+import { useToast } from "../../../shared/components";
 
 import { useDocumentTitle } from "../../../hooks/useDocumentTitle";
 import logger from "../../../utils/logger";
@@ -34,6 +36,7 @@ import logger from "../../../utils/logger";
 
 const InterviewResults = () => {
   useDocumentTitle("Interview Results");
+  const { success } = useToast();
   const { id: sessionId } = useParams();
   const navigate = useNavigate();
   const [results, setResults] = useState(null);
@@ -491,8 +494,21 @@ const InterviewResults = () => {
                 </div>
               )}
               {a.feedback && (
-                <div className="mt-4 p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 text-sm">
-                  <span className="font-bold text-indigo-400 block mb-1">AI Evaluation Feedback:</span>
+                <div className="mt-4 p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 text-sm relative group">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-bold text-indigo-400 block">AI Evaluation Feedback:</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(a.feedback);
+                        success("Feedback copied to clipboard!");
+                      }}
+                      className="p-1.5 text-indigo-400/60 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                      title="Copy Feedback"
+                    >
+                      <Copy size={16} />
+                    </button>
+                  </div>
                   <p className="text-text-muted leading-relaxed">{a.feedback}</p>
                 </div>
               )}

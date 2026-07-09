@@ -15,7 +15,8 @@ import {
   Globe,
   PenTool,
   Loader2,
-  BarChart3
+  BarChart3,
+  Copy
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Button from "../../../shared/components/Button";
@@ -474,13 +475,26 @@ const AnalysisResult = ({ result, file, jobDescription, onReset }) => {
 
           {/* Strategic Improvements Section */}
           <div className="bg-white dark:bg-[#121214] border border-gray-100 dark:border-white/5 rounded-3xl p-8 shadow-sm">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl">
-                <Layout className="w-5 h-5 text-emerald-500" />
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl">
+                  <Layout className="w-5 h-5 text-emerald-500" />
+                </div>
+                <h3 className="text-[15px] font-bold text-gray-900 dark:text-white">
+                  Strategic Improvements
+                </h3>
               </div>
-              <h3 className="text-[15px] font-bold text-gray-900 dark:text-white">
-                Strategic Improvements
-              </h3>
+              <button
+                onClick={() => {
+                  const textToCopy = (suggestions || []).map(s => `- [${s.priority}] ${s.text}`).join("\n");
+                  navigator.clipboard.writeText(textToCopy);
+                  success("Feedback copied to clipboard!");
+                }}
+                className="p-2 text-gray-500 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors"
+                title="Copy Feedback"
+              >
+                <Copy size={16} />
+              </button>
             </div>
             <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
               <ul className="space-y-6">
