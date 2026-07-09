@@ -166,7 +166,7 @@ export const apiRequest = async (path, options = {}) => {
   };
 
   if (body !== undefined && body !== null) {
-    if (body instanceof FormData) {
+    if (body instanceof FormData || body instanceof URLSearchParams || body instanceof Blob) {
       // @ts-expect-error TODO: Fix pervasive types
       init.body = body;
     } else {
