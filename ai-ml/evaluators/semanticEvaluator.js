@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
 import SemanticCache from "../../server/src/database/models/SemanticCache.js";
+import logger from "../../server/src/utils/logger.js";
 
 const HF_MODEL_URL = "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/sentence-similarity";
 
@@ -59,7 +60,7 @@ async function callHFOnce(sourceText, compareText, hfToken) {
 
   if (!response.ok) {
     const errorBody = await response.text();
-    console.error(`[semanticEvaluator] HF API error (${response.status}):`, errorBody);
+    logger.error(`[semanticEvaluator] HF API error (${response.status}): ${errorBody}`);
     throw new Error(`Hugging Face API returned ${response.status}: ${response.statusText}`);
   }
 
@@ -78,7 +79,7 @@ const computeSimilarity = async (sourceText, compareText) => {
     try {
       const similarity = await callHFOnce(sourceText, compareText, hfToken);
       CIRCUIT.recordSuccess();
-      console.log(`[semanticEvaluator] Similarity computed: ${roundToTwo(similarity * 100)}%` + (attempt > 0 ? ` (after ${attempt} retry)` : ""));
+      logger.info(`[semanticEvaluator] Similarity computed: ${roundToTwo(similarity * 100)}%` + (attempt > 0 ? ` (after ${attempt} retry)` : ""));
       return similarity;
     } catch (err) {
       lastError = err;
@@ -86,7 +87,7 @@ const computeSimilarity = async (sourceText, compareText) => {
         CIRCUIT.recordFailure();
         if (attempt < MAX_RETRIES) {
           const waitMs = err.retryAfter != null ? err.retryAfter * 1000 : BASE_BACKOFF_MS * Math.pow(2, attempt);
-          console.warn(`[semanticEvaluator] 429 on attempt ${attempt + 1}/${MAX_RETRIES + 1}. Retrying in ${waitMs / 1000}s...`);
+          logger.warn(`[semanticEvaluator] 429 on attempt ${attempt + 1}/${MAX_RETRIES + 1}. Retrying in ${waitMs / 1000}s...`);
           await sleep(waitMs);
           continue;
         }
@@ -135,7 +136,7 @@ export const semanticEvaluator = async ({ resumeText = "", jobDescription = "" }
     if (mongoose.connection.readyState === 1) {
       const cachedResult = await SemanticCache.findOne({ resumeHash, jdHash });
       if (cachedResult) {
-        console.log("[semanticEvaluator] ⚡ Cache hit — skipping API call.");
+        logger.info("[semanticEvaluator] ⚡ Cache hit — skipping API call.");
         return {
           key: KEY, label: LABEL,
           score: cachedResult.score,

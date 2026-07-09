@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
@@ -8,6 +7,7 @@ dotenv.config({ path: path.join(process.cwd(), ".env") });
 
 import Notification from "../src/database/models/Notification.js";
 import MatchResult from "../src/database/models/MatchResult.js";
+import logger from "../src/utils/logger.js";
 
 /**
  * Sweeps the Notifications collection for "skill_gap_alert" records.
@@ -16,11 +16,11 @@ import MatchResult from "../src/database/models/MatchResult.js";
  * and is deleted.
  */
 export const runReconciliation = async () => {
-  console.log("Starting reconciliation job for orphaned notifications...");
+  logger.info("Starting reconciliation job for orphaned notifications...");
   
   if (mongoose.connection.readyState !== 1) {
     if (!process.env.MONGO_URI) {
-      console.error("MONGO_URI not found in environment variables.");
+      logger.error("MONGO_URI not found in environment variables.");
       process.exit(1);
     }
     await mongoose.connect(process.env.MONGO_URI);
@@ -33,13 +33,13 @@ export const runReconciliation = async () => {
     // These require relatedData.studentId and relatedData.jobId to be valid
     const notifications = await Notification.find({ type: "skill_gap_alert" });
 
-    console.log(`Found ${notifications.length} skill_gap_alert notifications to verify.`);
+    logger.info(`Found ${notifications.length} skill_gap_alert notifications to verify.`);
 
     for (const notif of notifications) {
       const { studentId, jobId } = notif.relatedData || {};
       
       if (!studentId || !jobId) {
-        console.warn(`Notification ${notif._id} is missing studentId or jobId. Skipping.`);
+        logger.warn(`Notification ${notif._id} is missing studentId or jobId. Skipping.`);
         continue;
       }
 
@@ -54,13 +54,13 @@ export const runReconciliation = async () => {
       if (!matchResultExists) {
         await Notification.findByIdAndDelete(notif._id);
         orphansDeleted++;
-        console.log(`Deleted orphaned notification ${notif._id} (User: ${studentId}, Job: ${jobId})`);
+        logger.info(`Deleted orphaned notification ${notif._id} (User: ${studentId}, Job: ${jobId})`);
       }
     }
 
-    console.log(`Reconciliation complete. Successfully deleted ${orphansDeleted} orphaned notifications.`);
+    logger.info(`Reconciliation complete. Successfully deleted ${orphansDeleted} orphaned notifications.`);
   } catch (error) {
-    console.error("Error during reconciliation job:", error);
+    logger.error(`Error during reconciliation job: ${error.message}`);
   } finally {
     // If run as a standalone script, disconnect
     if (import.meta.url === `file://${process.argv[1]}`) {
